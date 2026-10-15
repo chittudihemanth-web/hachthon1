@@ -7,7 +7,10 @@ import {
 } from '../lib/mockData';
 import type { Workflow, HitlStatus, Execution, HitlReviewItem, DashboardStats } from '../types';
 
-const API_BASE = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/$/, '');
+const rawBase = (import.meta.env.VITE_API_BASE_URL || '/api').trim().replace(/\/$/, '');
+const API_BASE = (rawBase.startsWith('http') && !rawBase.endsWith('/api'))
+  ? `${rawBase}/api`
+  : rawBase;
 
 async function apiFetch<T>(endpoint: string, options?: RequestInit, fallback?: T): Promise<T> {
   try {
