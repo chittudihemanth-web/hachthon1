@@ -1,0 +1,70 @@
+# ==============================================================================
+# PulseFlow AI — Render Blueprint Deployment Specification
+# Docs: https://render.com/docs/blueprint-spec
+# ==============================================================================
+
+services:
+  # ────────────────────────────────────────────────────────────────────────────
+  # 1. Backend Orchestration API Web Service
+  # ────────────────────────────────────────────────────────────────────────────
+  - type: web
+    name: pulseflow-backend
+    runtime: node
+    plan: free
+    region: oregon
+    rootDir: backend
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: GEMINI_DEFAULT_MODEL
+        value: gemini-2.5-flash
+      - key: HITL_DEFAULT_THRESHOLD
+        value: "0.85"
+      - key: DEFAULT_RETRY_LIMIT
+        value: "3"
+      - key: FRONTEND_URL
+        fromService:
+          type: web
+          name: pulseflow-frontend
+          property: host
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # 2. Frontend React 19 Client Static Site
+  # ────────────────────────────────────────────────────────────────────────────
+  - type: web
+    name: pulseflow-frontend
+    runtime: static
+    plan: free
+    region: oregon
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    autoDeploy: true
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_APP_NAME
+        value: "PulseFlow AI"
+      - key: VITE_APP_ENV
+        value: production
+      - key: VITE_API_BASE_URL
+        fromService:
+          type: web
+          name: pulseflow-backend
+          property: host
+      - key: VITE_SUPABASE_URL
+        sync: false
+      - key: VITE_SUPABASE_ANON_KEY
+        sync: false

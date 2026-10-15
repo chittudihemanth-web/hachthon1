@@ -7,7 +7,7 @@ import {
 } from '../lib/mockData';
 import type { Workflow, HitlStatus, Execution, HitlReviewItem, DashboardStats } from '../types';
 
-const API_BASE = '/api';
+const API_BASE = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/$/, '');
 
 async function apiFetch<T>(endpoint: string, options?: RequestInit, fallback?: T): Promise<T> {
   try {
