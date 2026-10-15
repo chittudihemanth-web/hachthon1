@@ -31,19 +31,32 @@ export class GeminiService {
     inputPayload: Record<string, unknown>,
     modelTier: 'flash' | 'pro' = 'flash'
   ): Promise<GeminiExtractionResult> {
-    const model = modelTier === 'pro' ? 'gemini-2.5-pro' : 'gemini-2.5-flash';
+    const model = ENV.GEMINI_DEFAULT_MODEL || 'gemini-3.8-flash';
     const startTime = Date.now();
 
     if (this.ai && ENV.GEMINI_API_KEY) {
       try {
         const prompt = `Extract all structured business entities, invoice fields, or customer data from the following JSON input. Return strict JSON format with fields: entities, summary, and confidence score between 0.0 and 1.0.\n\nInput Payload:\n${JSON.stringify(inputPayload, null, 2)}`;
         
-        const response = await this.ai.models.generateContent({
-          model,
-          contents: prompt,
-        });
+        let response;
+        try {
+          response = await this.ai.models.generateContent({
+            model,
+            contents: prompt,
+          });
+        } catch (firstErr: any) {
+          if (firstErr?.status === 503 || String(firstErr?.message).includes('503')) {
+            await new Promise((r) => setTimeout(r, 1000));
+            response = await this.ai.models.generateContent({
+              model,
+              contents: prompt,
+            });
+          } else {
+            throw firstErr;
+          }
+        }
 
-        const text = response.text || '{}';
+        const text = response?.text || '{}';
         let parsed: Record<string, unknown>;
         try {
           const jsonMatch = text.match(/\{[\s\S]*\}/);
@@ -98,7 +111,7 @@ export class GeminiService {
     inputPayload: Record<string, unknown>,
     modelTier: 'flash' | 'pro' = 'flash'
   ): Promise<{ category: string; confidence: number; reasoning: string; tokensIn: number; tokensOut: number; model: string }> {
-    const model = modelTier === 'pro' ? 'gemini-2.5-pro' : 'gemini-2.5-flash';
+    const model = ENV.GEMINI_DEFAULT_MODEL || 'gemini-3.8-flash';
     await new Promise(res => setTimeout(res, 180 + Math.random() * 200));
 
     const categories = ['Finance / AP', 'Customer Support', 'Sales Inquiry', 'Security Incident', 'Technical Operations'];

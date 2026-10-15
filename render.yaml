@@ -21,7 +21,7 @@ services:
       - key: NODE_ENV
         value: production
       - key: GEMINI_DEFAULT_MODEL
-        value: gemini-2.5-flash
+        value: gemini-3.8-flash
       - key: HITL_DEFAULT_THRESHOLD
         value: "0.85"
       - key: DEFAULT_RETRY_LIMIT
