@@ -65,7 +65,11 @@ class DatabaseManager {
   }
 
   async getWorkflow(id: string): Promise<Workflow | null> {
-    if (supabase && isSupabaseConfigured()) {
+    if (this.memoryWorkflows.has(id)) {
+      return this.memoryWorkflows.get(id) || null;
+    }
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+    if (supabase && isSupabaseConfigured() && isUuid) {
       try {
         const { data, error } = await supabase
           .from('workflows')
@@ -80,7 +84,7 @@ class DatabaseManager {
         console.warn(`[Database] Supabase getWorkflow(${id}) failed, falling back to cache:`, err);
       }
     }
-    return this.memoryWorkflows.get(id) || null;
+    return null;
   }
 
   async createWorkflow(wf: Workflow): Promise<Workflow> {
@@ -176,7 +180,11 @@ class DatabaseManager {
   }
 
   async getExecution(id: string): Promise<Execution | null> {
-    if (supabase && isSupabaseConfigured()) {
+    if (this.memoryExecutions.has(id)) {
+      return this.memoryExecutions.get(id) || null;
+    }
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+    if (supabase && isSupabaseConfigured() && isUuid) {
       try {
         const { data: exData, error: exError } = await supabase
           .from('executions')
@@ -201,7 +209,7 @@ class DatabaseManager {
         console.warn(`[Database] Supabase getExecution(${id}) failed:`, err);
       }
     }
-    return this.memoryExecutions.get(id) || null;
+    return null;
   }
 
   async createExecution(execution: Execution): Promise<Execution> {
@@ -305,7 +313,11 @@ class DatabaseManager {
   }
 
   async getHitlItem(id: string): Promise<HitlReviewItem | null> {
-    if (supabase && isSupabaseConfigured()) {
+    if (this.memoryHitlItems.has(id)) {
+      return this.memoryHitlItems.get(id) || null;
+    }
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+    if (supabase && isSupabaseConfigured() && isUuid) {
       try {
         const { data, error } = await supabase.from('hitl_reviews').select('*').eq('id', id).single();
         if (!error && data) {
@@ -315,7 +327,7 @@ class DatabaseManager {
         console.warn(`[Database] Supabase getHitlItem(${id}) failed:`, err);
       }
     }
-    return this.memoryHitlItems.get(id) || null;
+    return null;
   }
 
   async createHitlItem(item: HitlReviewItem): Promise<HitlReviewItem> {
